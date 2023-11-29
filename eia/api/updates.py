@@ -42,11 +42,7 @@ class Updates(BaseQuery):
         total_rows = (
             await self._get(data={**default_params, "rows": 1, "firstrow": 0})
         )["data"]["rows_available"]
-        if rows:
-            n_rows = min(rows, total_rows)
-        else:
-            n_rows = total_rows
-
+        n_rows = min(rows, total_rows) if rows else total_rows
         n_pages = int(ceil(n_rows / max_rows))
 
         coros = []
@@ -59,18 +55,14 @@ class Updates(BaseQuery):
             if firstrow + page_nrows > n_rows:
                 page_nrows = n_rows - firstrow
             response = self._get(data={**page_params, "rows": page_nrows})
-            coros.append(response)
-            coros.append(
-                asyncio.sleep(0.25)
-            )  # Rate limit ourselves to 4 requests/second
+            coros.extend((response, asyncio.sleep(0.25)))
         return await asyncio.gather(*coros)
 
     async def parse(self, rows: int = None):
         updates = []
         data = await self._get_data(rows)
         for response in filter(None, data):
-            for datum in response.get("updates"):
-                updates.append(datum)
+            updates.extend(iter(response.get("updates")))
         return updates
 
     def to_dict(self, rows: int = None):

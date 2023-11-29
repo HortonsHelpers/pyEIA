@@ -90,4 +90,4 @@ class Search(BaseQuery):
         return list(self._send_search_query(*args, **kwargs))
 
     def to_dataframe(self, *args, **kwargs):
-        return pd.concat((chunk for chunk in self._send_search_query(*args, **kwargs)))
+        return pd.concat(iter(self._send_search_query(*args, **kwargs)))
