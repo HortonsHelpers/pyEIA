@@ -50,9 +50,9 @@ class Browser:
         categories = []
         if not cat:
             categories = [self.root_category.value]
-        elif category_id in self.childcategories.values():
+        elif cat in self.childcategories.values():
             categories = [cat]
-        elif category_id in self.childcategories:
+        elif cat in self.childcategories:
             categories = [self.childcategories[cat]]
         if categories:
             return categories
@@ -67,7 +67,7 @@ class Browser:
                 matches = list(filter(l, self.childcategories))
             except re.error:
                 continue
-            if len(matches) > 0:
+            if matches:
                 return [self.childcategories[m] for m in matches]
 
         raise ValueError("category_id argument must be in childcategories.")
@@ -85,10 +85,7 @@ class Browser:
         else:  # Non Base Case
             p = path.pop(0)  # Remove the first element
             for node in self.parse_category_id(p):  # Goto each option
-                for i in self.browse_path(
-                    path, node
-                ):  # Parse remaining path with each option as a parent
-                    yield i  # and yield recursively until we get to BaseCase
+                yield from self.browse_path(path, node)
 
     def traverse_path(self, path, parent=None):
         if isinstance(path, str):
@@ -106,10 +103,7 @@ class Browser:
         while int(self.category_id) != int(self.root_category.value):
             if len(set(history)) != len(history):
                 raise BrowserError(
-                    (
-                        "Recursive history detected.  You have likely run `goto`"
-                        "outside the expected scope of category {}"
-                    ).format(self.root_category.value)
+                    f"Recursive history detected.  You have likely run `goto`outside the expected scope of category {self.root_category.value}"
                 )
             self.goto(self.parent_category_id)
             history.append(self.category_id)
@@ -194,7 +188,7 @@ class Browser:
         for f in funcs:
             fieldname = meta.pop(f)
             if fieldname not in valid_names:
-                raise ValueError("Meta dict must take one of {}".format(valid_names))
+                raise ValueError(f"Meta dict must take one of {valid_names}")
             m = f(series[fieldname])  # This should return a dictionary
             meta.update(m)
         return meta
@@ -265,18 +259,12 @@ class AEO(Browser):
     @property
     def scenario(self):
         fullpath = self.pathname
-        if len(fullpath) > 2:
-            return fullpath[2]
-        else:
-            return "Not currently within a scenario."
+        return fullpath[2] if len(fullpath) > 2 else "Not currently within a scenario."
 
     @property
     def aeoname(self):
         fullpath = self.pathname
-        if len(fullpath) > 1:
-            return fullpath[1]
-        else:
-            return "Not currently within a scenario"
+        return fullpath[1] if len(fullpath) > 1 else "Not currently within a scenario"
 
 
 class CrudeOil(Browser):

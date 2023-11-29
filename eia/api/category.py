@@ -18,8 +18,7 @@ class Category(BaseQuery):
         data = {**self._params}
         if self.category_id:
             data["category_id"] = self.category_id
-        data = httpx.get(self.url, params=data).json()["category"]
-        return data
+        return httpx.get(self.url, params=data).json()["category"]
 
     @property
     def childcategories(self):

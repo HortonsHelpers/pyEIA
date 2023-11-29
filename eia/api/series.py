@@ -54,8 +54,7 @@ class Series(BaseQuery):
         data = await self._get_data()
         output = []
         for group in data:
-            for series in group.get(key, []):
-                output.append(series)
+            output.extend(iter(group.get(key, [])))
         return output
 
     def to_dict(self) -> List[dict]:
